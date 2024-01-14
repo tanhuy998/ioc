@@ -2,13 +2,23 @@ const { IOC_NAMESPACE_DEFAULT } = require("./constant");
 const IocInterface = require("./iocInterface");
 const IocNamespace = require("./iocNamespace");
 
+/**
+ * @typedef {import('./iocContainer')} IocContainer
+ */
+
 module.exports = class IocNamespaceMangager {
 
     /**
      *  @type {Map<string|Symbol|number, IocNamespace>}
      */
     #namespaces = new Map();
+    /**@type {Map<>} */
+    #tag = new Map();
 
+    /**
+     * 
+     * @param {IocContainer} owner 
+     */
     constructor() {
 
         super();
@@ -28,7 +38,7 @@ module.exports = class IocNamespaceMangager {
         }
 
         return this.#namespaces
-                .set(id, new IocNamespace())
+                .set(id, new IocNamespace(id, this))
                 .get(id);
     }
 
@@ -41,6 +51,16 @@ module.exports = class IocNamespaceMangager {
 
         return this.get(id);
     }   
+
+    /**
+     * 
+     * @param {string|symbol|number} tag 
+     * @param {IocNamespace} namespace
+     */
+    setTag(tag, namespace) {
+
+
+    }
 
     /**
      * 

@@ -1,17 +1,24 @@
-const { checkType } = require('../../utils/type.js');
-const isAbstract = require('reflectype/src/utils/isAbstract.js');
+const { checkType } = require('../utils/iocType.util.js');
+//const isAbstract = require('reflectype/src/utils/isAbstract.js');
 
-const Interface = require('reflectype/src/interface/interface.js');
+//const Interface = require('reflectype/src/interface/interface.js');
 const ObjectInjectorEngine = require('../injector/objectInjectorEngine.js');
-const IocContainerSetDefaultInstanceError = require('../../errors/iocContainerSetDefaultInstanceError.js');
-const { hasPseudoConstructor, generateVirtualClass } = require('./virtualDependent.js');
+const IocContainerSetDefaultInstanceError = require('../errors/iocContainerSetDefaultInstanceError.js');
+const { hasPseudoConstructor, generateVirtualClass, isVirtualClass } = require('../dependent/virtual/virtualDependent.js');
 const IocInterface = require("./iocInterface.js");
+const IocBindingOption = require('./iocBindingOption.js');
+const iocContainerInterface = require('./iocContainerInterface.js');
+const DecoratorConcrete = require('../dependent/decorator/decoratorConcrete.js');
+
+/**
+ * @typedef {import('./iocContainer')} IocContainer
+ */
 
 class Empty {}
 
 const EMPTY = 0;
 
-module.exports = class IocNamespace extends IocInterface {
+module.exports = class IocNamespace extends iocContainerInterface {
 
     #id;
 
@@ -35,15 +42,19 @@ module.exports = class IocNamespace extends IocInterface {
     #objectInjector;
     #virtualConretes = new WeakMap();
 
+    /** @type {IocContainer}*/
+    #global;
+
     get id() {
 
         return this.#id;
     }
 
-    constructor(id) {
+    constructor(id, global) {
 
         super();
         this.#id = id;
+        this.#global = global;
         this.#init();
     }
 
@@ -60,8 +71,6 @@ module.exports = class IocNamespace extends IocInterface {
         }
 
         this.#stringKeys.set(key, value);
-
-        return super.bindArbitrary();
     }
 
     /**
@@ -72,30 +81,63 @@ module.exports = class IocNamespace extends IocInterface {
      */
     bind(abstract, concrete, override = false) {
 
+        this.#_setupVirtualDependent(abstract, concrete);
+        this.#_bind(
+            abstract, 
+            concrete instanceof DecoratorConcrete ? concrete.type : concrete
+        );
+
+        return new IocBindingOption(
+            this.#global, 
+            this, 
+            {
+                tagFor: abstract
+            }
+        );
+    }
+
+    /**
+     * 
+     * @param {Function} abstract 
+     * @param {Function} concrete 
+     */
+    #_setupVirtualDependent(abstract, concrete) {
+
+        const isVirtualDependent = concrete instanceof DecoratorConcrete;
+
+        concrete = isVirtualDependent ? concrete.type : concrete;
         checkType(abstract, concrete);
+
+        const virtualClass = !isVirtualDependent ? 
+                    generateVirtualClass(concrete)
+                    : concrete;
+
+        this.#virtualConretes.set(concrete, virtualClass);
+    }
+
+    #_bind(abstract, actualConcrete) {
+
+        checkType(abstract, actualConcrete);
 
         if (this.#container.has(abstract) && override) {
 
             this.#container.delete(abstract);
         }
 
-        this.#container.set(abstract, concrete);
-        // this.#_buildVirtualConcrete(abstract, concrete);
-
-        return super.bind();
+        this.#container.set(abstract, actualConcrete);
     }
 
-    #_buildVirtualConcrete(concrete) {
+    // #_buildVirtualConcrete(concrete) {
 
-        if (!hasPseudoConstructor(concrete)) {
+    //     if (!hasPseudoConstructor(concrete)) {
 
-            return;
-        }
+    //         return;
+    //     }
 
-        const virtualConcrete = generateVirtualClass(_class);
+    //     const virtualConcrete = generateVirtualClass(_class);
 
-        this.#virtualConretes.set(concrete, virtualConcrete);
-    }
+    //     this.#virtualConretes.set(concrete, virtualConcrete);
+    // }
 
     /**
      * 
@@ -202,32 +244,6 @@ module.exports = class IocNamespace extends IocInterface {
         return this.#singleton.has(_abstract);
     }
 
-    // /**
-    //  * 
-    //  * @param {Object} abstract 
-    //  * @param {Object} _constructorArgs 
-    //  * @returns {Object | undefined}
-    //  */
-    // get(abstract, _constructorArgs = {}) {
-
-    //     if (!this.#container.has(abstract)) {
-
-    //         return undefined;
-    //     }
-
-    //     if (this.#singleton.has(abstract)) {
-
-    //         return this.#resolveSingpleton(abstract);
-    //     }
-    //     else {
-
-    //         //const concrete = this.#container.get(abstract);
-    //         const concrete = this.#_getConcreteOf(abstract);
-
-    //         return this.build(concrete);
-    //     }
-    // }
-
     #resolveSingpleton(abstract) {
 
         const obj = this.#singleton.get(abstract);
@@ -281,27 +297,4 @@ module.exports = class IocNamespace extends IocInterface {
             throw new IocContainerSetDefaultInstanceError();
         }
     }
-
-    // /**
-    //  * 
-    //  * @param {string} key 
-    //  * @param {Object} _constructorArgs 
-    //  * @returns {Object | undefined} 
-    //  */
-    // getByKey(key, _constructorArgs = {}) {
-
-    //     if (!this.#stringKeys.has(key)) return undefined;
-
-    //     const abstract = this.#stringKeys.get(key);
-    //     const concrete = this.get(abstract, _constructorArgs);
-
-    //     if (concrete) {
-
-    //         return concrete;
-    //     }
-    //     else {
-
-    //         return this.build(abstract);
-    //     }
-    // }
 }

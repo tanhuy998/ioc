@@ -1,5 +1,5 @@
 const {CONSTRUCTOR} = require('../constants.js');
-const {hasRelationShip, checkType} = require('../../utils/type.js');
+const {hasRelationShip, checkType} = require('../utils/iocType.util.js');
 
 /**
  *  @typedef {import('./componentContainer.js')} ComponentContainer

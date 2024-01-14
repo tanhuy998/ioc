@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-ioc": "node ./test/ioc"
   },
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "reflectype": "^0.0.10-beta.10"
+    "reflectype": "^0.0.10-beta.11"
   },
   "devDependencies": {
     "@types/node": "^20.11.0"
