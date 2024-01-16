@@ -1,5 +1,5 @@
 {
-  "name": "ioc",
+  "name": "@isln/ioc",
   "version": "0.0.0-beta",
   "description": "",
   "main": "index.js",
@@ -7,12 +7,15 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test-ioc": "node ./test/ioc"
   },
-  "author": "",
+  "author": "tanhuy998",
   "license": "MIT",
   "dependencies": {
-    "reflectype": "^0.0.10-beta.11"
+    "reflectype": "^0.0.10-beta.13"
   },
   "devDependencies": {
     "@types/node": "^20.11.0"
+  },
+  "directories": {
+    "test": "test"
   }
 }

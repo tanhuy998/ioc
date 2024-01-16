@@ -1,19 +1,23 @@
-const IocInterface = require("./iocInterface");
+const IocInterface = require("./interfaces/iocInterface");
 
 /**
- * @typedef {import('./iocNamespaceManager')} IocNamespaceMangager
+ * @typedef {import('./iocContainer')} IocContainer
  */
 
+/**
+ * IocNamespaceProxy class prevents ioc namespace manager from initiating 
+ * inaction namespace that is not declared.
+ */
 module.exports = class IocNameSpaceProxy extends IocInterface {
 
-    /**@type {IocNamespaceMangager} */
-    #namespaceManager;
+    /**@type {IocContainer} */
+    #iocContainer;
     #namespaceId;
 
-    constructor(namespaceId, namespaceManager) {
+    constructor(namespaceId, iocContainer) {
 
         this.#namespaceId = namespaceId;
-        this.#namespaceManager = namespaceManager;
+        this.#iocContainer = iocContainer;
     }
 
     /**
@@ -23,11 +27,16 @@ module.exports = class IocNameSpaceProxy extends IocInterface {
      * @param {string|symbol|number} namespaceId 
      * @returns {IocBindingOption}
      */
-    bind(abstract, concrete) {
+    bind(
+        abstract, 
+        concrete, 
+        options = {
+            namespace: this.#namespaceId
+        }
+    ) {
 
-        return this.#namespaceManager
-            .getOrNew(this.#namespaceId)
-            .bind(abstract, concrete);
+        this.#initOptions(options);
+        this.#iocContainer.bind(...arguments);
     }
 
     /**
@@ -37,10 +46,21 @@ module.exports = class IocNameSpaceProxy extends IocInterface {
      * @param {string|symbol|number} namespaceId 
      * @returns {IocBindingOption}
      */
-    bindSingleton(abstract, concrete) {
+    bindSingleton(
+        abstract, 
+        concrete, 
+        options = {
+            namespace: this.#namespaceId    
+        }
+    ) {
 
-        return this.#namespaceManager
-        .getOrNew(this.#namespaceId)
-        .bindSingleton(abstract, concrete);
+        this.#initOptions(options);
+        this.iocContainer.bindSingleton(...arguments);
+    }
+
+    #initOptions(options) {
+
+        const optionNamspace = options.namespace;
+        options.namespace = optionNamspace === this.#namespaceId ? optionNamspace : this.#namespaceId;
     }
 }

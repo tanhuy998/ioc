@@ -1,11 +1,11 @@
 /**
- * @typedef {import('./iocNamespaceManager.js')} IocNamespaceMangager
+ * @typedef {import('./iocNamespaceManager.js')} IocNamespaceManager
  * @typedef {import('./iocNamespace.js') IocNamespace
  */
 
 module.exports = class IocBindingOption {
 
-    /** @type {IocNamespaceMangager}*/
+    /** @type {IocNamespaceManager}*/
     #global;
     /** @type {IocNamespace} */
     #namespace;

@@ -1,9 +1,9 @@
-const { IOC_NAMESPACE_DEFAULT } = require("./constant");
-const IocInterface = require("./iocInterface");
+const { IOC_NAMESPACE_DEFAULT } = require("../constant");
+const IocInterface = require("../interfaces/iocInterface");
 const IocNamespace = require("./iocNamespace");
 
 /**
- * @typedef {import('./iocContainer')} IocContainer
+ * @typedef {import('../iocContainer')} IocContainer
  */
 
 module.exports = class IocNamespaceMangager {

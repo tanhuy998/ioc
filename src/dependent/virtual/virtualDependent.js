@@ -1,9 +1,10 @@
 const { isInstantiable } = require("reflectype/src/libs/type");
 const { CONSTRUCTOR } = require("../../constant.js");
-const { ioc_seed_t } = require("../../ioc/iocSeed.js");
+const { ioc_seed_t } = require("../../ioc/namespace/iocSeed.js");
 const self = require("reflectype/src/utils/self");
 const ReflectionPrototypeMethod = require("reflectype/src/metadata/prototypeReflection/reflectionPrototypeMethod");
 const DecoratorConcrete = require("../decorator/decoratorConcrete.js");
+const OptionalConcrete = require("../option/optionalConcrete.js");
 
 module.exports = {
     hasPseudoConstructor,
@@ -97,7 +98,7 @@ function generateVirtualClass(_originClass) {
         throw new TypeError('could not generate virtual class from _originClass');
     }
 
-    return class extends DecoratorConcrete {
+    return class extends OptionalConcrete {
 
         static type = _originClass;
 

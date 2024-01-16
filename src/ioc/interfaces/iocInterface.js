@@ -1,4 +1,4 @@
-const IocBindingOption = require("./iocBindingOption");
+const IocBindingOption = require("../namespace/iocBindingOption");
 
 module.exports = class IocInterface {
     
