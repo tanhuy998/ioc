@@ -2,9 +2,12 @@
  * @typedef {import('../ioc/iocContainer.js')} IocContainer
  */
 
+const AbstractReflection = require('reflectype/src/metadata/abstract/abstractReflection.js');
 const DecoratorConcrete = require('../dependent/decorator/decoratorConcrete.js');
+const { isInstantiable } = require('reflectype/src/libs/type.js');
+const IDependencyDiscoverable = require('./IDependencyDicoverable.js');
 
-module.exports = class Injector {
+module.exports = class Injector extends IDependencyDiscoverable {
 
     static #context;
 
@@ -23,6 +26,7 @@ module.exports = class Injector {
 
     constructor(_iocContainer) {
 
+        super();
         this.#iocContainer = _iocContainer;
     }
 

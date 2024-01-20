@@ -10,7 +10,7 @@
   "author": "tanhuy998",
   "license": "MIT",
   "dependencies": {
-    "reflectype": "^0.0.10-beta.13"
+    "reflectype": "^0.0.10-beta.15"
   },
   "devDependencies": {
     "@types/node": "^20.11.0"

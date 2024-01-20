@@ -58,6 +58,21 @@ module.exports = class IocNameSpaceProxy extends IocInterface {
         this.iocContainer.bindSingleton(...arguments);
     }
 
+    get(abstract, _constructorArgs = {}, namespaceId = IOC_NAMESPACE_DEFAULT) {
+
+        
+    }
+
+    builđ(_class) {
+
+
+    }
+
+    setSingletonDefaultInstance() {
+
+        
+    }
+
     #initOptions(options) {
 
         const optionNamspace = options.namespace;

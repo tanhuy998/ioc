@@ -21,7 +21,6 @@ module.exports = class IocNamespaceMangager {
      */
     constructor() {
 
-        super();
         this.#init();
     }
 

@@ -1,8 +1,12 @@
 const Injector = require("./injector");
 const AutoAccessorInjectorEngine = require('./autoAccessorInjectorEngine');
 const CouldNotInjectError = require('../errors/couldNotInjectError.js');
-const {CONSTRUCTOR} = require('../constants.js');
+const {CONSTRUCTOR} = require('../constant.js');
 const MethodInjectorEngine = require("./methodInjectorEngine.js");
+const ReflectionClassPrototype = require("reflectype/src/metadata/prototypeReflection/reflectionClassPrototype.js");
+const ReflectionQuerySubject = require("reflectype/src/metadata/query/reflectionQuerySubject.js");
+const { FOOTPRINT } = require("reflectype/src/libs/constant.js");
+const { AUTOWIRED } = require("../utils/decorator/constant.js");
 
 /**
  * @typedef {Object} prototype_pair_t
@@ -12,6 +16,8 @@ const MethodInjectorEngine = require("./methodInjectorEngine.js");
 
 module.exports = class ObjectInjectorEngine extends Injector {
 
+    
+
     constructor(_iocContainer) {
 
         super(...arguments);
@@ -19,46 +25,61 @@ module.exports = class ObjectInjectorEngine extends Injector {
     
     /**
      * 
+     * @param {ReflectionClassPrototype} reflection 
+     * @returns 
+     */
+    _implementDiscovery(reflection) {
+
+        if (!reflection.isValid) {
+
+            return;
+        }
+
+        this.#iterateAutowiredProperties(reflection);
+        this.#iteratePseudoConstructorParams(reflection)
+    }
+
+    /**
+     * 
+     * @param {ReflectionClassPrototype} reflection 
+     */
+    #iterateAutowiredProperties(reflection) {
+
+        const propMeta = reflection.mirror()
+                            .from(ReflectionQuerySubject.PROTOTYPE)
+                            .where({
+                                isMethod: false,
+                                FOOTPRINT: {
+                                    AUTOWIRED: true
+                                },
+                            });
+
+        
+    }
+
+    #iteratePseudoConstructorParams(reflection) {
+
+
+    }
+
+    _getReflectionClass() {
+
+        return ReflectionClassPrototype;
+    }
+
+    /**
+     * 
      * @param {Object} _object 
      */
     #traceProtoPseudoConstructorChain(_object, _scope) {
 
-        //const protoStack = this.#resolvePrototypeStack(_object);
+        
 
-        //const functionInjector = new FunctionInjectorEngine(this.iocContainer);
         const methodInjector = new MethodInjectorEngine(this.iocContainer);
         const fieldInjector = new AutoAccessorInjectorEngine(this.iocContainer);
 
         fieldInjector.inject(_object, _scope);
         methodInjector.inject()
-
-        // the order of psudo constructor injection must be from base class to derived class
-        // to insure the consitence and integrity of data
-        // const pseudoConstructorStack = new Set();
-
-        // for (const pair of protoStack || []) {
-
-        //     const {classProto, objectProto} = pair;
-        //     const pseudoConstructor = typeof classProto.prototype === 'object'? classProto.prototype[CONSTRUCTOR] : undefined;
-            
-        //     if (typeof pseudoConstructor !== 'function') {
-
-        //         continue;       
-        //     }
-
-        //     const args = methodInjector.resolveComponentsFor({target: classProto, methodName: CONSTRUCTOR}, _scope);
-
-        //     pseudoConstructor.call(_object, ...(args ?? []));
-
-        //     // if (!pseudoConstructorStack.has(pseudoConstructor)) {
-
-        //     //     const args = methodInjector.resolveComponentsFor({target: classProto, methodName: CONSTRUCTOR}, _scope);
-
-        //     //     pseudoConstructor.call(_object, ...(args ?? []));
-        //     //     pseudoConstructorStack.add(pseudoConstructor);
-        //     // }
-        //     //fieldInjector.inject(_object, _scope);
-        // }
     }
 
     /**

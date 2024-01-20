@@ -9,7 +9,6 @@ const IocNamespaceMangager = require('./namespace/iocNamespaceManager.js');
 const IocNamespace = require('./namespace/iocNamespace.js');
 const { IOC_NAMESPACE_DEFAULT } = require('./constant.js');
 const { isObjectKey } = require('reflectype/src/libs/type.js');
-const iocContainerInterface = require('./interfaces/iocContainerInterface.js');
 const IocInterface = require('./interfaces/iocInterface.js');
 const IocBindingOption = require('./namespace/iocBindingOption.js');
 const IocNameSpaceProxy = require('./iocNameSpaceProxy.js');
@@ -61,8 +60,9 @@ module.exports = class IocContainer extends IocInterface {
         }
     ) {
 
-        const seed = this.#bind(...arguments);
+        const namespace = this.#bind(...arguments);
 
+        return new IocNameSpaceProxy(namespace.id, this);
     }
 
     /**
@@ -80,10 +80,13 @@ module.exports = class IocContainer extends IocInterface {
         }
     ) {
 
-        this.#bind(...arguments).singleton = true;
+        const namespace = this.#bind(...arguments);
+        namespace.markSingleton(abstract);
+        
+        return new IocNameSpaceProxy(namespace.id, this);
     }
 
-    bindArbitrary(tag, concrete) {
+    bindArbitrary(tag, concrete, options) {
 
 
     }
@@ -94,7 +97,7 @@ module.exports = class IocContainer extends IocInterface {
      * @param {Function} concrete 
      * @param {Object} options 
      * 
-     * @returns {ioc_seed_t}
+     * @returns {IocNamespace}
      */
     #bind(abstract, concrete, options) {
 
@@ -106,7 +109,7 @@ module.exports = class IocContainer extends IocInterface {
 
         namespace.acquire(abstract, seed);
 
-        return
+        return namespace;
     }
 
     /**
@@ -117,60 +120,56 @@ module.exports = class IocContainer extends IocInterface {
      */
     get(abstract, _constructorArgs = {}, namespaceId = IOC_NAMESPACE_DEFAULT) {
 
+        if (this.#namespaceManager.has(namespaceId)) {
+
+            throw new Error(`could not get() from unregistered namespace ${namespaceId}`);
+        }
+
         const namespace = this.#namespaceManager.namespace(namespaceId);
 
         if (!namespace.has(abstract)) {
 
-            return this.build(abstract);
+            return this.#build(abstract, namespaceId, {args: _constructorArgs});
         }
 
-        if (namespace.hasSingleton(abstract)) {
-
-            return this.#resolveSingpleton(abstract, namespace);
-        }
-        else {
-
-            //const concrete = this.#container.get(abstract);
-            const concrete = namespace.getConcreteOf(abstract);
-            return this.build(concrete);
-        }
-    }
-
-    /**
-     * 
-     * @param {Function} abstract 
-     * @param {IocNamespace} namespace 
-     */
-    #resolveSingpleton(abstract, namespace) {
-
-        if (!namespace.hasSingleton(abstract)) {
-
-            throw new Error(`${namespace.id} has never bound ${abstract.name} as singleton`);
-        }
+        const seed = namespace.getSeed(abstract);
 
         if (
-            namespace.hasSingletonObjectOf(abstract)
+            seed.singleton &&
+            namespace.isSingletonInstantiated(abstract)
         ) {
 
             return namespace.getSingletonObjectOf(abstract);
         }
 
-        const concrete = namespace.getConcreteOf(abstract);
-        const instance = this.build(concrete);
+        const instance = this.#build(seed.conrete, namespaceId, {args: _constructorArgs});
 
-        namespace.setDefaultInstanceFor(abstract, instance);
+        if (seed.singleton) {
+
+            namespace.setSingletonObject(abstract, instance);
+        }
 
         return instance;
     }
 
-    // setDefaultInstanceFor(abstract, instance, namespaceId) {
+    setSingletonDefaultInstance(abstract, instance, namespaceId = IOC_NAMESPACE_DEFAULT) {
 
-    //     return this.#namespaceManager
-    //     .get(namespaceId)
-    //     .setDefaultInstanceFor(abstract, instance);
-    // }
+        const namespace = this.#namespaceManager.get(namespaceId);
 
-    build(concrete) {
+        if (!namespace) {
+
+            throw new Error();
+        }
+
+        namespace.setSingletonObject(abstract, instance);
+    }
+
+    build(concrete, namespaceId, options) {
+
+
+    }
+
+    #build(_concrete, namespaceId, options) {
 
         if (concrete instanceof Interface) {
 
@@ -187,32 +186,6 @@ module.exports = class IocContainer extends IocInterface {
 
         return instance;
     }
-
-    // getConcreteOf(abstract, namespaceId) {
-
-    //     return this.#namespaceManager
-    //     .get(namespaceId)
-    //     .getConcreteOf(abstract);
-    // }
-
-    // getConcreteByKey(key, namespaceId) {
-
-    //     return this.#namespaceManager
-    //     .get(namespaceId)
-    //     .getConcreteByKey(key);
-    // }
-
-    // getAbstractByKey(key, namespaceId) {
-
-    //     return this.#namespaceManager
-    //     .get(namespaceId)
-    //     .getAbstractByKey(key);
-    // }
-
-    // hasSingleton(abstract, namespaceId) {
-
-        
-    // }
 }
 
 

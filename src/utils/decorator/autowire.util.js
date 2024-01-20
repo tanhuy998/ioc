@@ -1,6 +1,6 @@
 //const initFootPrint = require('reflectype/src/libs/initFootPrint.js');
 const {initFootPrint, setMetadataFootPrint, getMetadataFootPrintByKey} = require('reflectype/src/libs/footPrint.js');
-const metadata = require('../metadata.js');
+//const metadata = require('../metadata.js');
 const { property_metadata_t, metadata_t } = require('reflectype/src/reflection/metadata.js');
 const { AUTOWIRED } = require('./constant.js');
 
@@ -56,7 +56,7 @@ function isAutowired(_any, _propName) {
 
 function function_isAutowired(_func) {
 
-    const propMeta = metadata.getTypeMetadata(_func);
+    //const propMeta = metadata.getTypeMetadata(_func);
 
     return propMeta instanceof property_metadata_t && isPropMetaAutowired(propMeta);
 }
@@ -64,7 +64,7 @@ function function_isAutowired(_func) {
 function objectProperty_isAutowired(_obj, _propName) {
 
     /**@type {metadata_t} */
-    const typeMeta = metadata.getTypeMetadata(_obj);
+    //const typeMeta = metadata.getTypeMetadata(_obj);
 
     const properties = typeMeta.properties;
 

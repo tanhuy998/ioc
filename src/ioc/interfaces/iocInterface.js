@@ -9,7 +9,7 @@ module.exports = class IocInterface {
      * @param {string|symbol|number} namespaceId 
      * @returns {IocBindingOption}
      */
-    bind(abstract, concrete) { return this;}
+    bind(abstract, concrete) { }
 
     /**
      * 
@@ -18,5 +18,8 @@ module.exports = class IocInterface {
      * @param {string|symbol|number} namespaceId 
      * @returns {IocBindingOption}
      */
-    bindSingleton(abstract, concrete) { return this;}
+    bindSingleton(abstract, concrete) { }
+    get() {}
+    setSingletonDefaultInstance() {}
+    build() {}
 }

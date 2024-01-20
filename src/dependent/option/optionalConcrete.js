@@ -1,6 +1,6 @@
 const self = require("reflectype/src/utils/self");
 const DecoratorConcrete = require("../decorator/decoratorConcrete");
-const { hasPseudoConstructor } = require("../virtual/virtualDependent");
+//const { hasPseudoConstructor } = require("../virtual/virtualDependent");
 const ReflectionPrototypeMethod = require("reflectype/src/metadata/prototypeReflection/reflectionPrototypeMethod");
 const { CONSTRUCTOR } = require("../../constant");
 const { isObjectLike, isInstantiable } = require("reflectype/src/libs/type");

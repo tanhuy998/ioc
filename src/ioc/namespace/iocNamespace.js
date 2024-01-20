@@ -12,6 +12,7 @@ const DecoratorConcrete = require('../../dependent/decorator/decoratorConcrete.j
 const OptionalConcrete = require('../../dependent/option/optionalConcrete.js');
 const { ioc_seed_t } = require('./iocSeed.js');
 const IocTagManager = require('../tag/iocTagManager.js');
+const { matchType, matchTypeOrFail, isInstantiable } = require('reflectype/src/libs/type.js');
 
 /**
  * @typedef {import('../iocContainer.js')} IocContainer
@@ -19,7 +20,7 @@ const IocTagManager = require('../tag/iocTagManager.js');
 
 class Empty {}
 
-const EMPTY = 0;
+const SINGLETON_NOT_INSTANTIATED = 0;
 
 module.exports = class IocNamespace {
 
@@ -48,7 +49,6 @@ module.exports = class IocNamespace {
 
     constructor(id, global) {
 
-        super();
         this.#id = id;
         this.#global = global;
         this.#init();
@@ -75,6 +75,18 @@ module.exports = class IocNamespace {
         this.#setupIfSingleton(seed);
     }
 
+
+    markSingleton(abstract) {
+
+        if (!this.#seeds.has(abstract)) {
+
+            throw new Error(`could not mark unregistered [${abstract.name}] as singleton`);
+        }
+
+        const seed = this.#seeds.get(abstract);
+        this.#setupIfSingleton(seed);
+    }
+
     /**
      * 
      * @param {ioc_seed_t} seed 
@@ -86,7 +98,12 @@ module.exports = class IocNamespace {
             return;
         }
 
-        seed.singletonIndex = seed.singleton === true ? 0 : undefined;
+        if (seed.singletonIndex > -1) {
+
+            return;
+        }
+
+        seed.singletonIndex = SINGLETON_NOT_INSTANTIATED;
     }
 
     /**
@@ -98,6 +115,8 @@ module.exports = class IocNamespace {
      */
     #bind(abstract, seed, overide) {
 
+        this.#validateConcrete(seed.conrete);
+
         this.#_bind(...arguments);
 
         return new IocBindingOption(
@@ -107,6 +126,14 @@ module.exports = class IocNamespace {
                 tagFor: abstract
             }
         );
+    }
+
+    #validateConcrete(concrete) {
+
+        if (!isInstantiable(concrete)) {
+
+            throw new Error();
+        }
     }
 
     /**
@@ -146,6 +173,11 @@ module.exports = class IocNamespace {
         return this.#seeds.has(abstract);
     }
 
+    getSeed(abstract) {
+
+        return this.#seeds.get(abstract);
+    }
+
     /**
      * 
      * @param {Object} abstract 
@@ -182,7 +214,27 @@ module.exports = class IocNamespace {
 
         const index = this.#seeds.get(abstract).singletonIndex;
 
-        return index > 0 ? this.#objectsPool[index] : undefined;
+        return index > SINGLETON_NOT_INSTANTIATED ? this.#objectsPool[index] : undefined;
+    }
+
+    setSingletonObject(abstract, instance) {
+
+        const seed = this.#seeds.get(abstract);
+
+        if (seed.singleton === false) {
+
+            throw new Error(`could not set singleton object for non singleton on namespace '${this.id}'`);
+        }
+
+        if (seed.singletonIndex !== SINGLETON_NOT_INSTANTIATED) {
+
+            throw new Error(`singleton object of [${abstract.name}] has been instantiated on namespace '${this.id}'`);
+        }
+
+        matchTypeOrFail(abstract, instance);
+
+        this.#objectsPool.push(instance);
+        seed.singletonIndex = this.#objectsPool.length - 1;
     }
 
     linkTag(tag, ) {
@@ -201,160 +253,4 @@ module.exports = class IocNamespace {
 
         return this.#objectsPool[index];
     }
-
-    // /**
-    //  * 
-    //  * @param {string} key 
-    //  * @returns {Object | undefined}
-    //  */
-    // getConcreteByKey(key) {
-
-    //     const abstract = this.getAbstractByKey(key);
-
-    //     if (abstract) {
-
-    //         return this.getConcreteOf(abstract);
-    //     }
-    //     else {
-
-    //         return undefined;
-    //     }
-    // }
-
-    // #_getConcreteOf(abstract) {
-
-    //     const actualConcrete = this.getConcreteOf(abstract);
-
-    //     return this.#seeds.get(actualConcrete) ?? actualConcrete;
-    // }
-
-    // // will overide the instantiated singleton instance
-    // setDefaultInstanceFor(_abstract, _instance) {
-
-    //     if (!this.has(_abstract)) {
-
-    //         throw new Error('');
-    //     }
-
-    //     const instancePrototype = _instance.constructor;
-
-    //     checkType(_abstract, instancePrototype);
-
-    //     if (this.#singleton.has(_abstract)) {
-
-    //         this.#singleton.delete(_abstract);
-    //         this.#singleton.set(_abstract, _instance);
-    //     }
-    //     else {
-
-    //         throw new IocContainerSetDefaultInstanceError();
-    //     }
-    // }
-
-    // /**
-    //  * 
-    //  * @param {Object} abstract 
-    //  * @param {ioc_seed_t} seed 
-    //  * @param {boolean} override 
-    //  */
-    // #bindSingleton(abstract, seed, override = false) {
-
-    //     this.#bind(abstract, concrete, override);
-
-    //     if (this.#singleton.has(abstract) && override) {
-
-    //         this.#singleton.delete(abstract);
-    //     }
-
-    //     const empty = this.#objectsPool[EMPTY];
-
-    //     this.#singleton.set(abstract, empty);
-
-    //     return super.bindSingleton();
-    // }
-
-    // #resolveSingpleton(abstract) {
-
-    //     const obj = this.#singleton.get(abstract);
-
-    //     if (obj.constructor === Empty) {
-
-    //         //const concrete = this.#seeds.get(abstract);
-    //         const concrete = this.#_getConcreteOf(abstract);
-    //         const instance = this.build(concrete);
-
-    //         this.#singleton.delete(abstract);
-    //         this.#singleton.set(abstract, instance);
-
-    //         return instance;
-    //     }
-    //     else {
-
-    //         return obj;
-    //     }
-    // }
-
-
-    // /**
-    //  * 
-    //  * @param {string} key 
-    //  * @returns {Object | undefined}
-    //  */
-    // getAbstractByKey(key) {
-
-    //     if (!this.#stringKeys.has(key)) return undefined;
-
-    //     return this.#stringKeys.get(key);
-    // }
-
-    // /**
-    //  * 
-    //  * @param {string} key 
-    //  * @returns {boolean}
-    //  */
-    // hasKey(key) {
-
-    //     return this.#stringKeys.has(key);
-    // }
-
-    // #_buildVirtualConcrete(concrete) {
-
-    //     if (!hasPseudoConstructor(concrete)) {
-
-    //         return;
-    //     }
-
-    //     const virtualConcrete = generateVirtualClass(_class);
-
-    //     this.#seeds.set(concrete, virtualConcrete);
-    // }
-
-    // bindArbitrary(key, value) {
-
-    //     if (this.#stringKeys.has(key)) {
-
-    //         this.#stringKeys.delete(key);
-    //     }
-
-    //     this.#stringKeys.set(key, value);
-    // }
-
-    // /**
-    //  * 
-    //  * @param {Function} abstract 
-    //  * @param {Function} concrete 
-    //  */
-    // #_setupVirtualDependent(abstract, concrete) {
-
-    //     const isVirtualDependent = concrete instanceof OptionalConcrete;
-
-    //     concrete = isVirtualDependent ? concrete.type : concrete;
-    //     checkType(abstract, concrete);
-
-    //     const virtualClass = !isVirtualDependent ? 
-    //                 generateVirtualClass(concrete)
-    //                 : concrete;
-
-    //     this.#seeds.set(concrete, virtualClass);
-    // }
 }
